@@ -1,17 +1,23 @@
-# Use Golang 1.24.1 based on Alpine for a minimal image
+# Use Golang 1.24.1 based on Alpine
 FROM golang:1.24.1-alpine
 
 WORKDIR /app
 
-# Copy the go.mod and go.sum files for dependency caching
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy the go.work file to enable multi-module workspace
+COPY go.work ./
 
-# Copy the rest of the application code
+# Copy the API module files (go.mod, go.sum) from cmd/api
+COPY cmd/api/go.mod cmd/api/go.sum ./
+
+# Copy the rest of the project, so that pkg is available (this copies the entire repository)
 COPY . .
 
-# Build the binary for the API service
-RUN go build -o api .
+RUN go mod download
+
+
+
+# Build the binary for the API service; adjust the build path to point to cmd/api
+RUN go build -o api ./cmd/api
 
 # Expose the port your API listens on
 EXPOSE 8080
