@@ -25,8 +25,8 @@ services:
 
   api:
     build:
-      context: ./cmd/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./cmd/api/Dockerfile
     restart: always
     depends_on:
       - db
@@ -43,11 +43,13 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     networks:
       - gophic-network
+    volumes:
+      - gophic_log:/app/logs
 
   worker:
     build:
-      context: ./cmd/worker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./cmd/worker/Dockerfile
     restart: always
     depends_on:
       - db
@@ -60,6 +62,8 @@ services:
       MQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
     networks:
       - gophic-network
+    volumes:
+      - gophic_log:/app/logs
 
 networks:
   gophic-network:
@@ -67,3 +71,4 @@ networks:
 
 volumes:
   db_data:
+  gophic_log:
