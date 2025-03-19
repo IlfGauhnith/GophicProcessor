@@ -2,6 +2,17 @@
 
 This project uses a monorepo with a multi-module approach, organized into two main directories: **`cmd/`** and **`pkg/`**.
 
+## How to Run
+
+1. **Prerequisites:**  
+   Ensure you have Docker and Docker Compose installed on your system.
+
+2. **Starting the Services:**  
+   In the project root directory (where your `docker-compose.yml` file is located), run:
+
+   ```bash
+   docker-compose up --build
+   
 ## Overview
 
 - **`cmd/`**: Contains the entry points (executables) for different services.
@@ -16,7 +27,7 @@ This project uses a monorepo with a multi-module approach, organized into two ma
 
 - **Structure & Contents:**  
   - **`cmd/api/`**  
-    - Contains the `main.go` for the RESTful API (using Gin or Echo).
+    - Contains the `main.go` for the RESTful API (using Gin).
     - Has its own `go.mod` file to manage dependencies independently.
   - **`cmd/worker/`**  
     - Contains the `main.go` for the background worker service.
@@ -57,3 +68,21 @@ This project uses a monorepo with a multi-module approach, organized into two ma
 ---
 
 This structure follows common Go community practices and is inspired by well-known project layout patterns. It helps keep the code modular, scalable, and easy to navigate, making it ideal for growing projects like GophicProcessor.
+
+## Docker Compose Configuration
+
+The docker-compose file orchestrates four main services:
+
+- **db:**  
+  Uses the official PostgreSQL 13 image. It creates a database using environment variables (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) and persists data with a named volume (`db_data`).
+
+- **rabbitmq:**  
+  Runs RabbitMQ with the management plugin enabled, exposing ports 5672 (for AMQP) and 15672 (for the management UI). It uses environment variables for default user credentials.
+
+- **api:**  
+  Builds the API service from the `./cmd/api` directory using its Dockerfile. It depends on the `db` and `rabbitmq` services and sets environment variables for database connectivity, RabbitMQ, and Google OAuth credentials.
+
+- **worker:**  
+  Builds the worker service from the `./cmd/worker` directory using its Dockerfile. Like the API, it depends on the `db` and `rabbitmq` services and shares the same environment configuration for accessing the database and message queue.
+
+All services are connected via a custom bridge network (`gophic-network`), ensuring they can communicate seamlessly. This setup allows you to easily develop and run a microservices architecture with consistent environments and persistent data.
