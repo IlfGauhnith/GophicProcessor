@@ -1,6 +1,8 @@
 package handler
 
 import (
+	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+
 	"net/http"
 
 	auth "github.com/IlfGauhnith/GophicProcessor/pkg/auth"

@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

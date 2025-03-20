@@ -2,20 +2,10 @@ package main
 
 import (
 	handler "github.com/IlfGauhnith/GophicProcessor/cmd/api/handler"
+	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		logger.Log.Warn("Error loading .env file")
-		logger.Log.Warn("Environment variables will be loaded from the system")
-	}
-
-	logger.Log.Info("Environment variables loaded successfully from .env")
-}
 
 func main() {
 	port := ":8080"
