@@ -1,8 +1,9 @@
 package main
 
 import (
-	handler "github.com/IlfGauhnith/GophicProcessor/cmd/api/handler"
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+
+	handler "github.com/IlfGauhnith/GophicProcessor/cmd/api/handler"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
 	"github.com/gin-gonic/gin"
 )

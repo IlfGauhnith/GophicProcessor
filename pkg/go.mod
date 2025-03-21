@@ -11,5 +11,7 @@ require (
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	github.com/gemnasium/logrus-graylog-hook v2.0.7+incompatible // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 )

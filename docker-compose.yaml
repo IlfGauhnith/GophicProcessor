@@ -31,6 +31,7 @@ services:
     depends_on:
       - db
       - rabbitmq
+      - graylog
     ports:
       - "8080:8080"
     environment:
@@ -41,6 +42,7 @@ services:
       MQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GRAYLOG_ADDR: ${GRAYLOG_ADDR}
     networks:
       - gophic-network
     volumes:
@@ -60,10 +62,56 @@ services:
       DB_PASS: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
       MQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+    profiles: ["optional"] # Tells the Docker-Compose to only run this service if the profile is set
     networks:
       - gophic-network
     volumes:
       - gophic_log:/app/logs
+  mongodb:
+    image: mongo:4.2
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - gophic-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gophic-network
+
+  graylog:
+    image: graylog/graylog:4.0
+    environment:
+      GRAYLOG_PASSWORD_SECRET: ${GRAYLOG_PASSWORD_SALT}
+      GRAYLOG_ROOT_PASSWORD_SHA2: ${GRAYLOG_ROOT_PASSWORD_SHA2}
+      
+      # External URL at which the Graylog web interface can be accessed. 
+      # It’s used by Graylog to generate links and references within its UI and emails.
+      GRAYLOG_HTTP_EXTERNAL_URI: http://localhost:9000/
+
+      GRAYLOG_MONGODB_URI: mongodb://mongodb:27017/graylog
+      GRAYLOG_MONGO_URI: mongodb://mongodb:27017/graylog
+      GRAYLOG_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    ports:
+      - "9000:9000"   # Graylog web interface
+      - "12201:12201/udp"  # GELF UDP input
+    networks:
+      - gophic-network
 
 networks:
   gophic-network:
@@ -72,3 +120,5 @@ networks:
 volumes:
   db_data:
   gophic_log:
+  mongo_data:
+  es_data:
