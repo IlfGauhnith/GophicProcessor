@@ -1,0 +1,1 @@
+tree /a /f | Where-Object {$_ -notlike "*node_modules*" -and $_ -notlike "*.next*"} > tree.txt
