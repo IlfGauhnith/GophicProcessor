@@ -1,7 +1,10 @@
 package main
 
 import (
+	"time"
+
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+	"github.com/gin-contrib/cors"
 
 	handler "github.com/IlfGauhnith/GophicProcessor/cmd/api/handler"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
@@ -14,6 +17,15 @@ func main() {
 	logger.Log.Info("Starting API server")
 
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // React dev server origin
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour, // Browser can cache this config for 12 hours
+	}))
 
 	// Health endpoint
 	router.GET("/health", handler.HealthHandler)

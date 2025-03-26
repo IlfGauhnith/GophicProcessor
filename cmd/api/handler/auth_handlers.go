@@ -29,9 +29,9 @@ func GoogleAuthHandler(c *gin.Context) {
 	// Store the state in a cookie (valid for 1 hour)
 	c.SetCookie("oauthstate", state, 3600, "", "", false, true)
 
-	// Redirect to Google's OAuth consent page with the generated state
+	// Send redirect url as googleUrl
 	url := auth.GetAuthURL(state)
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	c.JSON(http.StatusOK, gin.H{"googleUrl": url})
 }
 
 func GoogleAuthCallBackHandler(c *gin.Context) {
