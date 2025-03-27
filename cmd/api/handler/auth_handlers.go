@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
+
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+	model "github.com/IlfGauhnith/GophicProcessor/pkg/model"
 
 	"net/http"
 
@@ -36,7 +41,6 @@ func GoogleAuthHandler(c *gin.Context) {
 
 func GoogleAuthCallBackHandler(c *gin.Context) {
 	logger.Log.Info("GoogleAuthCallBackHandler")
-	// Callback endpoint to handle Google's OAuth redirect
 
 	// Retrieve the expected state from the cookie
 	expectedState, err := c.Cookie("oauthstate")
@@ -71,6 +75,31 @@ func GoogleAuthCallBackHandler(c *gin.Context) {
 		return
 	}
 
-	// For now, simply return the user info as JSON.
-	c.JSON(http.StatusOK, userInfo)
+	// Convert the user info map to the struct
+	var userInfoStruct model.GoogleUserInfo
+	userInfoBytes, err := json.Marshal(userInfo)
+	if err != nil {
+		logger.Log.Error("failed to marshal user info: ", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to marshal user info"})
+		return
+	}
+
+	err = json.Unmarshal(userInfoBytes, &userInfoStruct)
+	if err != nil {
+		logger.Log.Error("failed to unmarshal user info: ", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unmarshal user info"})
+		return
+	}
+
+	jwt, err := auth.GenerateJWT(userInfoStruct.Email)
+	if err != nil {
+		logger.Log.Error("failed to generate JWT: ", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		return
+	}
+
+	// Redirect to frontend with JWT and user info as query parameters
+	frontendURL := os.Getenv("FRONTEND_URL")
+	redirectURL := fmt.Sprintf("%s/OAuthCallback?token=%s&name=%s&email=%s", frontendURL, jwt, userInfoStruct.Name, userInfoStruct.Email)
+	c.Redirect(http.StatusFound, redirectURL)
 }

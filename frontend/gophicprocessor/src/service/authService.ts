@@ -8,6 +8,7 @@ export async function googleOAuthLogin() {
     const response = await fetch(`${apiUrl}/auth/google`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Sending cookies
     });
 
     if (!response.ok) {
