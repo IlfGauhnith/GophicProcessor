@@ -44,6 +44,8 @@ func main() {
 	// Endpoint to resize images
 	router.POST("/resize-images", handler.ResizeImagesHandler)
 
+	router.GET("/resize-images/status/:jobId", handler.GetResizeJobStatus)
+
 	logger.Log.Infof("API server listening on port %s", port)
 	router.Run(port)
 }
