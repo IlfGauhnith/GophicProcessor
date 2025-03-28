@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./resource/migrations:/docker-entrypoint-initdb.d # Migrations DIR
+      - ./resource/scripts:/custom-scripts
     networks:
       - gophic-network
 
@@ -56,13 +58,16 @@ services:
     depends_on:
       - db
       - rabbitmq
+      - graylog
+    ports:
+      - "6060:6060" # pprof server
     environment:
       DB_HOST: db
       DB_USER: ${POSTGRES_USER}
       DB_PASS: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
       MQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
-    profiles: ["optional"] # Tells the Docker-Compose to only run this service if the profile is set
+      GRAYLOG_ADDR: ${GRAYLOG_ADDR}
     networks:
       - gophic-network
     volumes:
