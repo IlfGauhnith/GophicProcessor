@@ -19,7 +19,7 @@ func GoogleAuthHandler(c *gin.Context) {
 	logger.Log.Info("GoogleAuthHandler")
 
 	// Generate a new state for each auth request
-	state, err := auth.GenerateState(32)
+	state, err := auth.GenerateOAuthState(32)
 	if err != nil {
 		logger.Log.Error("failed to generate oauth state")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate state"})

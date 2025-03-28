@@ -2,6 +2,7 @@ package routes
 
 import (
 	handler "github.com/IlfGauhnith/GophicProcessor/cmd/api/handler"
+	"github.com/IlfGauhnith/GophicProcessor/cmd/api/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +20,7 @@ func InitRoutes(router *gin.Engine) {
 
 	// Image resize endpoints
 	imageRoutes := router.Group("/resize-images")
+	imageRoutes.Use(middleware.AuthMiddleware())
 	{
 		imageRoutes.POST("/", handler.ResizeImagesHandler)
 		imageRoutes.GET("/status/:jobId", handler.GetResizeJobStatus)

@@ -12,9 +12,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-// GenerateState generates a random string to use as the OAuth state.
+// GenerateOAuthState generates a random string to use as the OAuth state.
 // The 'length' parameter specifies how many random bytes to generate.
-func GenerateState(length int) (string, error) {
+func GenerateOAuthState(length int) (string, error) {
 	bytes := make([]byte, length)
 	_, err := rand.Read(bytes)
 	if err != nil {

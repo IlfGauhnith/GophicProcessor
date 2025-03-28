@@ -34,6 +34,7 @@ func main() {
 
 	// Initialize routes from the router package
 	routes.InitRoutes(router)
+	logger.Log.Info("Routes successfully initialized.")
 
 	logger.Log.Infof("API server listening on port %s", port)
 	router.Run(port)
