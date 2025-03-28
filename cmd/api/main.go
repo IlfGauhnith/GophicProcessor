@@ -6,7 +6,7 @@ import (
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
 	"github.com/gin-contrib/cors"
 
-	handler "github.com/IlfGauhnith/GophicProcessor/cmd/api/handler"
+	routes "github.com/IlfGauhnith/GophicProcessor/cmd/api/routes"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
 	util "github.com/IlfGauhnith/GophicProcessor/pkg/util"
 
@@ -32,19 +32,8 @@ func main() {
 		MaxAge:           12 * time.Hour, // Browser can cache this config for 12 hours
 	}))
 
-	// Health endpoint
-	router.GET("/health", handler.HealthHandler)
-
-	// Endpoint to initiate Google OAuth login
-	router.GET("/auth/google", handler.GoogleAuthHandler)
-
-	// Callback endpoint to handle Google's OAuth redirect
-	router.GET("/auth/google/callback", handler.GoogleAuthCallBackHandler)
-
-	// Endpoint to resize images
-	router.POST("/resize-images", handler.ResizeImagesHandler)
-
-	router.GET("/resize-images/status/:jobId", handler.GetResizeJobStatus)
+	// Initialize routes from the router package
+	routes.InitRoutes(router)
 
 	logger.Log.Infof("API server listening on port %s", port)
 	router.Run(port)

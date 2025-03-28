@@ -15,11 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HealthHandler(c *gin.Context) {
-	logger.Log.Info("HealthHandler")
-	c.JSON(http.StatusOK, gin.H{"status": "API is running"})
-}
-
 func GoogleAuthHandler(c *gin.Context) {
 	logger.Log.Info("GoogleAuthHandler")
 
