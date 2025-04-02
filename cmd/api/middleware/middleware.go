@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/IlfGauhnith/GophicProcessor/pkg/auth"
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
 	"github.com/IlfGauhnith/GophicProcessor/pkg/logger"
+	util "github.com/IlfGauhnith/GophicProcessor/pkg/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,7 +32,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// Validate the JWT token
-		token, err := auth.ValidateJWT(tokenString)
+		token, err := util.ValidateJWT(tokenString)
 		if err != nil || !token.Valid {
 			logger.Log.Warnf("Invalid token: %v", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})

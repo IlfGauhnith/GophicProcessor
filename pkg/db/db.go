@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

@@ -4,9 +4,11 @@ import (
 	"time"
 
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+
 	"github.com/gin-contrib/cors"
 
 	routes "github.com/IlfGauhnith/GophicProcessor/cmd/api/routes"
+	"github.com/IlfGauhnith/GophicProcessor/pkg/db"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
 	util "github.com/IlfGauhnith/GophicProcessor/pkg/util"
 
@@ -20,6 +22,9 @@ func main() {
 	// Run shutdown signal handling in a separate goroutine
 	// for clean shutdown
 	go util.WaitForShutdown()
+
+	// Initializes db
+	db.InitDB()
 
 	router := gin.Default()
 

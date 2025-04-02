@@ -1,4 +1,4 @@
-package jobs_persistence
+package data_handler
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
+
 	db "github.com/IlfGauhnith/GophicProcessor/pkg/db"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
 	model "github.com/IlfGauhnith/GophicProcessor/pkg/model"
@@ -15,8 +16,8 @@ import (
 // SaveJobResult saves the result of a job to the database
 func SaveResizeJob(resizeJob model.ResizeJob) error {
 	query := `
-    INSERT INTO resize_job (resize_job_uuid, status, imgs_urls, algorithm)
-    VALUES ($1, $2, $3, $4)
+    INSERT INTO tb_resize_job (resize_job_uuid, status, imgs_urls, algorithm, owner_id)
+    VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT (resize_job_uuid) DO UPDATE
     SET status = $2, imgs_urls = $3;
     `
@@ -26,9 +27,10 @@ func SaveResizeJob(resizeJob model.ResizeJob) error {
 		logger.Log.Errorf("Failed to acquire DB connection: %v", err)
 		return err
 	}
+	logger.Log.Info("DB connection successfully acquired.")
 	defer conn.Release()
 
-	_, err = conn.Exec(context.Background(), query, resizeJob.JobID, resizeJob.Status, resizeJob.Images, resizeJob.Algorithm)
+	_, err = conn.Exec(context.Background(), query, resizeJob.JobID, resizeJob.Status, resizeJob.Images, resizeJob.Algorithm, resizeJob.OwnerID)
 	if err != nil {
 		logger.Log.Errorf("Failed to save resize job result: %v", err)
 		return err
@@ -40,8 +42,8 @@ func SaveResizeJob(resizeJob model.ResizeJob) error {
 
 func GetResizeJob(jobID string) (*model.ResizeJob, error) {
 	query := `
-    SELECT resize_job_uuid, status, imgs_urls, algorithm
-    FROM resize_job
+    SELECT resize_job_uuid, status, imgs_urls, algorithm, owner_id
+    FROM tb_resize_job
     WHERE resize_job_uuid = $1;
     `
 	conn, err := db.GetDB().Acquire(context.Background())
@@ -49,10 +51,12 @@ func GetResizeJob(jobID string) (*model.ResizeJob, error) {
 		logger.Log.Errorf("Failed to acquire DB connection: %v", err)
 		return nil, err
 	}
+	logger.Log.Info("DB connection successfully acquired.")
 	defer conn.Release()
 
 	var jobIDResult, status, algorithm, result string
-	err = conn.QueryRow(context.Background(), query, jobID).Scan(&jobIDResult, &status, &result, &algorithm)
+	var ownerID int
+	err = conn.QueryRow(context.Background(), query, jobID).Scan(&jobIDResult, &status, &result, &algorithm, &ownerID)
 	if err == pgx.ErrNoRows {
 		logger.Log.Warnf("No resize job found with ID: %s", jobID)
 		return nil, fmt.Errorf("resize job not found")
@@ -70,6 +74,7 @@ func GetResizeJob(jobID string) (*model.ResizeJob, error) {
 		Status:    status,
 		Images:    imgURLs,
 		Algorithm: algorithm,
+		OwnerID:   ownerID,
 	}
 
 	logger.Log.Infof("Successfully retrieved resize job for job ID: %s", jobID)
@@ -79,7 +84,7 @@ func GetResizeJob(jobID string) (*model.ResizeJob, error) {
 // UpdateJobStatus updates the status of an existing job
 func UpdateResizeJobStatus(jobID, status string) error {
 	query := `
-    UPDATE resize_job
+    UPDATE tb_resize_job
     SET status = $1
     WHERE resize_job_uuid = $2;
     `
@@ -88,6 +93,7 @@ func UpdateResizeJobStatus(jobID, status string) error {
 		logger.Log.Errorf("Failed to acquire DB connection: %v", err)
 		return err
 	}
+	logger.Log.Info("DB connection successfully acquired.")
 	defer conn.Release()
 
 	_, err = conn.Exec(context.Background(), query, status, jobID)

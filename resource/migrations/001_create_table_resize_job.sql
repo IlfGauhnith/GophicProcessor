@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS resize_job;
-
-CREATE TABLE IF NOT EXISTS resize_job (
+CREATE TABLE IF NOT EXISTS tb_resize_job (
     resize_job_id SERIAL PRIMARY KEY,
     resize_job_uuid VARCHAR(50) UNIQUE,
     status VARCHAR(20) NOT NULL,

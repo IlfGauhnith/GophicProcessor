@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -11,7 +12,10 @@ import (
 	"net/http"
 
 	auth "github.com/IlfGauhnith/GophicProcessor/pkg/auth"
+	data_handler "github.com/IlfGauhnith/GophicProcessor/pkg/db/data_handler"
+	data_errors "github.com/IlfGauhnith/GophicProcessor/pkg/errors"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
+	util "github.com/IlfGauhnith/GophicProcessor/pkg/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +23,7 @@ func GoogleAuthHandler(c *gin.Context) {
 	logger.Log.Info("GoogleAuthHandler")
 
 	// Generate a new state for each auth request
-	state, err := auth.GenerateOAuthState(32)
+	state, err := util.GenerateOAuthState(32)
 	if err != nil {
 		logger.Log.Error("failed to generate oauth state")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate state"})
@@ -71,7 +75,7 @@ func GoogleAuthCallBackHandler(c *gin.Context) {
 	}
 
 	// Convert the user info map to the struct
-	var userInfoStruct model.GoogleUserInfo
+	var googleUserInfoStruct model.GoogleUserInfo
 	userInfoBytes, err := json.Marshal(userInfo)
 	if err != nil {
 		logger.Log.Error("failed to marshal user info: ", err.Error())
@@ -79,22 +83,45 @@ func GoogleAuthCallBackHandler(c *gin.Context) {
 		return
 	}
 
-	err = json.Unmarshal(userInfoBytes, &userInfoStruct)
+	err = json.Unmarshal(userInfoBytes, &googleUserInfoStruct)
 	if err != nil {
 		logger.Log.Error("failed to unmarshal user info: ", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unmarshal user info"})
 		return
 	}
 
-	jwt, err := auth.GenerateJWT(userInfoStruct.Email)
+	userStruct, err := data_handler.GetUserByGoogleID(googleUserInfoStruct.ID)
+	if err != nil {
+		var googleUserNotFound *data_errors.GoogleIDUserNotFound
+		if errors.As(err, &googleUserNotFound) {
+			logger.Log.Info("Google user not found in DB. Creating new user.")
+			// Update the outer variable, not creating a new one.
+			userStruct = util.NewUserFromGoogleUserInfo(googleUserInfoStruct)
+			if err = data_handler.SaveUser(userStruct); err != nil {
+				logger.Log.Error("Error saving user: ", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving user"})
+				return
+			}
+			logger.Log.Info("User successfully created from Google user info.")
+		} else {
+			logger.Log.Error("Error retrieving user by Google ID: ", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving user by Google ID"})
+			return
+		}
+	}
+
+	jwt, err := util.GenerateJWT(*userStruct)
 	if err != nil {
 		logger.Log.Error("failed to generate JWT: ", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
 		return
 	}
 
+	// stamping last login with now
+	data_handler.StampNowLastLogin(userStruct.ID)
+
 	// Redirect to frontend with JWT and user info as query parameters
 	frontendURL := os.Getenv("FRONTEND_URL")
-	redirectURL := fmt.Sprintf("%s/OAuthCallback?token=%s&name=%s&email=%s", frontendURL, jwt, userInfoStruct.Name, userInfoStruct.Email)
+	redirectURL := fmt.Sprintf("%s/OAuthCallback?token=%s&name=%s&email=%s", frontendURL, jwt, googleUserInfoStruct.Name, googleUserInfoStruct.Email)
 	c.Redirect(http.StatusFound, redirectURL)
 }

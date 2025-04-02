@@ -10,7 +10,7 @@ import (
 
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
 	db "github.com/IlfGauhnith/GophicProcessor/pkg/db"
-	jobs_persistence "github.com/IlfGauhnith/GophicProcessor/pkg/db/jobs_persistence"
+	data_handler "github.com/IlfGauhnith/GophicProcessor/pkg/db/data_handler"
 	resize "github.com/IlfGauhnith/GophicProcessor/pkg/imageproc/resize"
 	logger "github.com/IlfGauhnith/GophicProcessor/pkg/logger"
 	model "github.com/IlfGauhnith/GophicProcessor/pkg/model"
@@ -73,7 +73,7 @@ func main() {
 
 					job.Images = imgs
 					job.Status = "Completed"
-					jobs_persistence.SaveResizeJob(job)
+					data_handler.SaveResizeJob(job)
 
 					logger.Log.Infof("Job %s completed with %d images processed", job.JobID, len(imgs))
 				}
