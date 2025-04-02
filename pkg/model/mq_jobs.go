@@ -1,7 +1,7 @@
 package model
 
 type ResizeJob struct {
-	Id            int
+	Id            int      `json:"id"`
 	Images        []string `json:"images"`
 	Algorithm     string   `json:"algorithm"`
 	ResizePercent int      `json:"resize_percent"`

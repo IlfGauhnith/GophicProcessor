@@ -3,7 +3,6 @@ package data_handler
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
 
@@ -42,7 +41,7 @@ func SaveResizeJob(resizeJob model.ResizeJob) error {
 
 func GetResizeJob(jobID string) (*model.ResizeJob, error) {
 	query := `
-    SELECT resize_job_uuid, status, imgs_urls, algorithm, owner_id
+    SELECT resize_job_uuid, status, imgs_urls, algorithm, owner_id, resize_job_id 
     FROM tb_resize_job
     WHERE resize_job_uuid = $1;
     `
@@ -54,9 +53,10 @@ func GetResizeJob(jobID string) (*model.ResizeJob, error) {
 	logger.Log.Info("DB connection successfully acquired.")
 	defer conn.Release()
 
-	var jobIDResult, status, algorithm, result string
-	var ownerID int
-	err = conn.QueryRow(context.Background(), query, jobID).Scan(&jobIDResult, &status, &result, &algorithm, &ownerID)
+	var jobIDResult, status, algorithm string
+	var images []string
+	var ownerID, resizeJobID int
+	err = conn.QueryRow(context.Background(), query, jobID).Scan(&jobIDResult, &status, &images, &algorithm, &ownerID, &resizeJobID)
 	if err == pgx.ErrNoRows {
 		logger.Log.Warnf("No resize job found with ID: %s", jobID)
 		return nil, fmt.Errorf("resize job not found")
@@ -65,16 +65,14 @@ func GetResizeJob(jobID string) (*model.ResizeJob, error) {
 		return nil, err
 	}
 
-	// Split the result (which is stored as a comma-separated string) into an array of image URLs
-	imgURLs := strings.Split(result, ",")
-
 	// Construct the ResizeJob object
 	job := &model.ResizeJob{
 		JobID:     jobIDResult,
 		Status:    status,
-		Images:    imgURLs,
+		Images:    images,
 		Algorithm: algorithm,
 		OwnerID:   ownerID,
+		Id:        resizeJobID,
 	}
 
 	logger.Log.Infof("Successfully retrieved resize job for job ID: %s", jobID)
@@ -104,4 +102,67 @@ func UpdateResizeJobStatus(jobID, status string) error {
 
 	logger.Log.Infof("Successfully updated resize job status for job ID: %s to %s", jobID, status)
 	return nil
+}
+
+// GetResizeJobsByOwner retrieves all resize jobs for a given owner (user_id)
+func GetResizeJobsByOwner(ownerID int) ([]*model.ResizeJob, error) {
+	logger.Log.Infof("Getting resize jobs for owner_id: %d", ownerID)
+
+	conn, err := db.GetDB().Acquire(context.Background())
+	if err != nil {
+		logger.Log.Errorf("Failed to acquire DB connection: %v", err)
+		return nil, err
+	}
+	logger.Log.Info("DB connection successfully acquired.")
+	defer conn.Release()
+
+	// Adjust the query according to your table's schema.
+	query := `
+		SELECT resize_job_uuid, status, imgs_urls, algorithm, owner_id, resize_job_id
+		FROM tb_resize_job
+		WHERE owner_id = $1;
+	`
+
+	rows, err := conn.Query(context.Background(), query, ownerID)
+	if err != nil {
+		logger.Log.Errorf("Failed to query resize jobs for owner_id %d: %v", ownerID, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var jobs []*model.ResizeJob
+
+	for rows.Next() {
+		var jobID string
+		var status string
+		var images []string // Scans directly from the TEXT[] column
+		var algorithm string
+		var ownerIDResult int
+		var resizeJobID int
+
+		err = rows.Scan(&jobID, &status, &images, &algorithm, &ownerIDResult, &resizeJobID)
+		if err != nil {
+			logger.Log.Errorf("Error scanning row: %v", err)
+			return nil, err
+		}
+
+		job := &model.ResizeJob{
+			JobID:     jobID,
+			Status:    status,
+			Images:    images,
+			Algorithm: algorithm,
+			OwnerID:   ownerIDResult,
+			Id:        resizeJobID,
+		}
+
+		jobs = append(jobs, job)
+	}
+
+	if err = rows.Err(); err != nil {
+		logger.Log.Errorf("Error iterating over rows: %v", err)
+		return nil, err
+	}
+
+	logger.Log.Infof("Successfully retrieved %d resize jobs for owner_id: %d", len(jobs), ownerID)
+	return jobs, nil
 }

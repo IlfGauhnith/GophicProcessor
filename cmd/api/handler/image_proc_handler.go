@@ -29,6 +29,7 @@ func ResizeImagesHandler(c *gin.Context) {
 	if err != nil {
 		logger.Log.Errorf("Error parsing user from JWT: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error parsing user from JWT."})
+		return
 	}
 
 	// Casting api_model.ResizeRequest to model.ResizeJob
@@ -81,4 +82,61 @@ func GetResizeJobStatus(c *gin.Context) {
 
 	logger.Log.Infof("Job status retrieved successfully for job ID: %s", job.JobID)
 	c.JSON(http.StatusOK, response)
+}
+
+func GetResizeJobByID(c *gin.Context) {
+	logger.Log.Info("GetResizeJob")
+
+	// Extract job ID from the URL
+	jobId := c.Param("jobId")
+	if jobId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Job ID is required"})
+		return
+	}
+
+	// Extract user
+	authenticatedUser, err := util.GetUserFromJWT(c.Request.Header["Authorization"][0])
+	if err != nil {
+		logger.Log.Errorf("Error parsing user from JWT: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error parsing user from JWT."})
+		return
+	}
+
+	// Get the resize job from the database
+	job, err := data_handler.GetResizeJob(jobId)
+	if err != nil {
+		logger.Log.Errorf("Failed to get resize job status: %v", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
+		return
+	}
+
+	if job.OwnerID != authenticatedUser.ID {
+		logger.Log.Warn("Security breach, system retrieved a job not belonging to the authenticated user.")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving the job."})
+		return
+	}
+
+	c.JSON(http.StatusOK, job)
+}
+
+func GetResizeJob(c *gin.Context) {
+	logger.Log.Info("GetResizeJob")
+
+	// Extract user
+	authenticatedUser, err := util.GetUserFromJWT(c.Request.Header["Authorization"][0])
+	if err != nil {
+		logger.Log.Errorf("Error parsing user from JWT: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error parsing user from JWT."})
+		return
+	}
+
+	// Get the resize job from the database
+	jobs, err := data_handler.GetResizeJobsByOwner(authenticatedUser.ID)
+	if err != nil {
+		logger.Log.Errorf("Failed to get resize job status: %v", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, jobs)
 }

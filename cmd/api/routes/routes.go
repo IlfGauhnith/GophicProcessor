@@ -23,6 +23,9 @@ func InitRoutes(router *gin.Engine) {
 	imageRoutes.Use(middleware.AuthMiddleware())
 	{
 		imageRoutes.POST("/", handler.ResizeImagesHandler)
+
+		imageRoutes.GET("/", handler.GetResizeJob)
+		imageRoutes.GET("/:jobId", handler.GetResizeJobByID)
 		imageRoutes.GET("/status/:jobId", handler.GetResizeJobStatus)
 	}
 }
