@@ -21,7 +21,7 @@ export default function OAuthCallback() {
   }, [router, searchParams]);
 
   return (
-    <div>
+    <div className="bg-[#9C8F8B]">
       <h1>Redirecting...</h1>
     </div>
   );

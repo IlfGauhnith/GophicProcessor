@@ -3,27 +3,30 @@
 
 import React from "react";
 import Header from "../components/Header";
+import { Flex } from "@radix-ui/themes";
+import Image from "next/image";
 
 export default function HomePage() {
   return (
-    // Set `relative` so child elements can be absolutely positioned
-    <main>
+    <main className="min-h-screen flex flex-col bg-cover bg-center bg-[#9C8F8B]">
       <Header />
-      <div className="relative flex flex-col items-center justify-center h-screen">
-        <img
+      <Flex
+        id="main-flex"
+        className="tw-center flex-1 w-full h-full items-center justify-center"
+      >
+        <Image
+          id="gophic-logo"
           src="/GophicProcessor-Logo.png"
           alt="GophicProcessor Logo"
+          width={150}
+          height={150}
           className="
-          mb-8
-          w-24      /* Default (mobile): smaller image */
-          sm:w-76   /* Custom screen widths if configured in Tailwind */
-          md:w-88
-          lg:w-94
-          xl:w-112
           h-auto
+          object-contain
+          sm:w-[350px]
         "
         />
-      </div>
+      </Flex>
     </main>
   );
 }
