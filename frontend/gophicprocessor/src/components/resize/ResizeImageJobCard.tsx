@@ -4,12 +4,13 @@ import { Box, Card, Inset, Separator, Text, Flex, Select, IconButton, Spinner } 
 import Image from "next/image";
 import React, { useState } from "react";
 import { EnterIcon, DownloadIcon } from "@radix-ui/react-icons";
+import { sendJob, pollJobStatus, getJobResult } from "../../service/resizeService";
 
 export type ResizeImageJobCardProps = {
   cardKey: number;
   previewUrl: string;
+  file: File;
   fileName: string;
-  algorithmChosen: string;
   originalPixelWidth: number;
   originalPixelHeight: number;
   targetPixelWidth: number;
@@ -27,18 +28,18 @@ export type ResizeImageJobCardProps = {
 };
 
 const algorithms = [
-  "Nearest Neighbor",
-  "Bilinear",
-  "Bicubic",
-  "Lanczos2",
-  "Lanczos3",
+  ["Nearest Neighbor", "nearest"],
+  ["Bilinear", "bilinear"],
+  ["Bicubic", "bicubic"],
+  ["Lanczos2", "lanczos2"],
+  ["Lanczos3", "lanczos3"],
 ];
 
 export default function ResizeImageJobCard({
   cardKey,
   previewUrl,
+  file,
   fileName,
-  algorithmChosen,
   originalPixelWidth,
   originalPixelHeight,
   targetPixelWidth,
@@ -48,9 +49,10 @@ export default function ResizeImageJobCard({
   onCardClick,
 }: ResizeImageJobCardProps) {
 
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState(algorithmChosen);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState(algorithms[0]);
   const [algorithmOptions] = useState(algorithms);
   const [jobStatus, setJobStatus] = useState<"idle" | "processing" | "processed">("idle");
+  const [jobAPIuuid, setJobAPIuuid] = useState<string | null>(null);
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -65,15 +67,84 @@ export default function ResizeImageJobCard({
   };
 
   const handleSendJob = async () => {
+    
+    function stripDataUriPrefix(dataUri: string): string {
+      const commaIndex = dataUri.indexOf(',');
+      return commaIndex !== -1 ? dataUri.substring(commaIndex + 1) : dataUri;
+    }
+    
     setJobStatus("processing");
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      let imageBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+      });
+
+      imageBase64 = stripDataUriPrefix(imageBase64);
+      
+      const algorithm = selectedAlgorithm[1];
+      const targetWidth = targetPixelWidth;
+      const targetHeight = targetPixelHeight;
+
+      // Send the job to the backend. This function should return a response that includes a job_id.
+      const result = await sendJob(imageBase64, algorithm, targetWidth, targetHeight);
+      const jobId = result.job_id;
+
+
+      const uuidFetched = await pollJobStatus(jobId);
+      setJobAPIuuid(uuidFetched);
+
+      // Once the job is complete, update the state.
       setJobStatus("processed");
     } catch (error) {
       console.error("Job submission failed", error);
       setJobStatus("idle");
     }
   };
+  
+  const handleDownloadJob = async () => {
+    try {
+      if (!jobAPIuuid) {
+        throw new Error("No job API uuid available");
+      }
+      // Call the service function that gets the job result.
+      const result = await getJobResult(jobAPIuuid);
+      const images = result.images;
+      if (images && images.length > 0) {
+        const downloadUrl = images[0]; // Get the first image URL
+        
+        // Fetch the file as a Blob
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+          throw new Error("Failed to fetch the image for download");
+        }
+        const blob = await response.blob();
+        
+        // Create an object URL from the Blob
+        const blobUrl = URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element and trigger a download
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${cardKey}-${fileName}`; // Replace cardKey and fileName appropriately
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Revoke the object URL after a short delay to release memory
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      } else {
+        throw new Error("No images found in the job result");
+      }
+    } catch (error) {
+      console.error("Download job failed", error);
+    }
+  };
+
 
   return (
     // Wrap the entire card in a clickable container.
@@ -113,16 +184,20 @@ export default function ResizeImageJobCard({
         <Flex mb="2">
           <Select.Root
             size="1"
-            value={selectedAlgorithm}
-            onValueChange={(value) => setSelectedAlgorithm(value)}
+            value={selectedAlgorithm[0]}
+            onValueChange={(value) => {
+              const selected = algorithmOptions.find((option) => option[0] === value);
+              if (selected)
+                setSelectedAlgorithm(selected);
+            }}
           >
             <Select.Trigger>
               <Text>{selectedAlgorithm}</Text>
             </Select.Trigger>
             <Select.Content>
               {algorithmOptions.map((algorithm) => (
-                <Select.Item key={algorithm} value={algorithm}>
-                  <Text>{algorithm}</Text>
+                <Select.Item key={algorithm[0]} value={algorithm[0]}>
+                  <Text>{algorithm[0]}</Text>
                 </Select.Item>
               ))}
             </Select.Content>
@@ -156,13 +231,21 @@ export default function ResizeImageJobCard({
 
           {jobStatus === "processed" && (
             <Box>
-              <IconButton size="2" variant="soft" color="blue">
+              <IconButton
+                size="2"
+                variant="soft"
+                color="blue"
+                onClick={(e) => {
+                  e.stopPropagation(); // prevent card's onClick from firing
+                  handleDownloadJob();
+                }}
+              >
                 <DownloadIcon width="15" height="15" />
               </IconButton>
             </Box>
           )}
         </Flex>
       </Card>
-    </Box>
+    </Box >
   );
 }

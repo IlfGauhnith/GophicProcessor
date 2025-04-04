@@ -22,10 +22,11 @@ func InitRoutes(router *gin.Engine) {
 	imageRoutes := router.Group("/resize-images")
 	imageRoutes.Use(middleware.AuthMiddleware())
 	{
-		imageRoutes.POST("/", handler.ResizeImagesHandler)
+		imageRoutes.POST("", handler.PostResizeImagesHandler)
+		imageRoutes.GET("", handler.GetResizeJobHandler)
 
-		imageRoutes.GET("/", handler.GetResizeJob)
-		imageRoutes.GET("/:jobId", handler.GetResizeJobByID)
-		imageRoutes.GET("/status/:jobId", handler.GetResizeJobStatus)
+		imageRoutes.GET("/:jobId", handler.GetResizeJobByIDHandler)
+
+		imageRoutes.GET("/status/:jobId", handler.GetResizeJobStatusHandler)
 	}
 }

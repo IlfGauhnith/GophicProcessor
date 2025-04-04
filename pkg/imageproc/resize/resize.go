@@ -12,8 +12,8 @@ import (
 )
 
 func ResizeImages(job model.ResizeJob) ([]string, error) {
-	logger.Log.Infof("Processing job %s with algorithm %s and resize percent %d",
-		job.JobID, job.Algorithm, job.ResizePercent)
+	logger.Log.Infof("Processing job %s with algorithm %s",
+		job.JobID, job.Algorithm)
 
 	strategy, err := GetResizeStrategy(job.Algorithm)
 	if err != nil {
@@ -30,9 +30,8 @@ func ResizeImages(job model.ResizeJob) ([]string, error) {
 			continue
 		}
 
-		// Calculate the new dimensions based on the resize percent
-		width := uint(float64(img.Bounds().Dx()) * (float64(job.ResizePercent) / 100))
-		height := uint(float64(img.Bounds().Dy()) * (float64(job.ResizePercent) / 100))
+		width := uint(job.TargetWidth)
+		height := uint(job.TargetHeight)
 
 		resizedImg := strategy.Resize(img, width, height)
 

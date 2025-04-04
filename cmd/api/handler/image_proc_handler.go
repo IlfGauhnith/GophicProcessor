@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func ResizeImagesHandler(c *gin.Context) {
+func PostResizeImagesHandler(c *gin.Context) {
 	logger.Log.Info("ResizeImagesHandler")
 
 	var requestStruct api_model.ResizeRequest
@@ -37,12 +37,13 @@ func ResizeImagesHandler(c *gin.Context) {
 	// which is a unique identifier for the job
 	jobID := uuid.New().String()
 	resizeJob := model.ResizeJob{
-		Images:        requestStruct.Images,
-		Algorithm:     requestStruct.Algorithm,
-		ResizePercent: requestStruct.ResizePercent,
-		JobID:         jobID,
-		Status:        "In Progress",
-		OwnerID:       authenticatedUser.ID,
+		Images:       requestStruct.Images,
+		Algorithm:    requestStruct.Algorithm,
+		TargetWidth:  requestStruct.TargetWidth,
+		TargetHeight: requestStruct.TargetHeight,
+		JobID:        jobID,
+		Status:       "In Progress",
+		OwnerID:      authenticatedUser.ID,
 	}
 
 	logger.Log.Infof("jobID created: %s", jobID)
@@ -56,7 +57,7 @@ func ResizeImagesHandler(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"job_id": jobID})
 }
 
-func GetResizeJobStatus(c *gin.Context) {
+func GetResizeJobStatusHandler(c *gin.Context) {
 	logger.Log.Info("GetResizeJobStatus")
 
 	// Extract job ID from the URL
@@ -84,7 +85,7 @@ func GetResizeJobStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetResizeJobByID(c *gin.Context) {
+func GetResizeJobByIDHandler(c *gin.Context) {
 	logger.Log.Info("GetResizeJob")
 
 	// Extract job ID from the URL
@@ -119,7 +120,7 @@ func GetResizeJobByID(c *gin.Context) {
 	c.JSON(http.StatusOK, job)
 }
 
-func GetResizeJob(c *gin.Context) {
+func GetResizeJobHandler(c *gin.Context) {
 	logger.Log.Info("GetResizeJob")
 
 	// Extract user

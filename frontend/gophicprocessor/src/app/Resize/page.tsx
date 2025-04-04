@@ -3,7 +3,7 @@
 import Header from "@/components/Header";
 import { Box, Flex, Grid, Tabs, Text, Switch, Separator, IconButton } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Slider from "@radix-ui/react-slider";
 import ResizeImageJobCard from "@/components/resize/ResizeImageJobCard";
 import styles from "../../styles/Resize.module.css"
@@ -18,7 +18,16 @@ type UploadedImage = {
     height: number;
 };
 
+
 export default function Resize() {
+    // states
+    const [uploadedImagesMapping, setUploadedImagesMapping] = useState(new Map<number, UploadedImage>());
+
+    const [pixelWidthMapping, setPixelWidthMapping] = useState(new Map<number, number>());
+    const [pixelHeightMapping, setPixelHeightMapping] = useState(new Map<number, number>());
+
+    const clamp = (value: number) => Math.min(99, Math.max(1, value));
+
     // Global job options state.
     const [jobOptions, setJobOptions] = useState({
         lastJobKey: 0,
@@ -29,72 +38,107 @@ export default function Resize() {
         keepAspectRatio: true,
     });
 
+    // Using for files uploaded by the user.
+    const generateUniqueId = (s: string): number => {
+        let hash = 0;
+
+        // Generate a simple hash from the string
+        for (let i = 0; i < s.length; i++) {
+            hash = ((hash << 5) - hash) + s.charCodeAt(i);
+            hash |= 0; // Convert to a 32-bit integer
+        }
+
+
+        return Date.now() * 10000 + Math.abs(hash) + Math.floor(Math.random() * 1000);
+    }
+
     // When updating width:
     const updatePixelWidth = (newWidth: number) => {
         setJobOptions((prev) => {
-          const jobOptionsPrev = prev;
+            const jobOptionsPrev = prev;
 
-          let newHeight = jobOptionsPrev.pixelHeight;
-          if (jobOptionsPrev.keepAspectRatio && jobOptionsPrev.pixelWidth) {
-            const ratio = jobOptionsPrev.pixelHeight / jobOptionsPrev.pixelWidth;
-            newHeight = Math.round(newWidth * ratio);
-          }
-      
-          setPixelWidthMapping((prevMapping) => {
-            const newMap = new Map(prevMapping);
-            newMap.set(jobOptionsPrev.lastJobKey, newWidth);
-            return newMap;
-          });
+            let newHeight = jobOptionsPrev.pixelHeight;
+            if (jobOptionsPrev.keepAspectRatio && jobOptionsPrev.pixelWidth) {
+                const ratio =jobOptionsPrev.pixelHeight / jobOptionsPrev.pixelWidth;
+                newHeight = Math.round(newWidth * ratio);
+            }
 
-          setPixelHeightMapping((prevMapping) => {
-            const newMap = new Map(prevMapping);
-            newMap.set(jobOptionsPrev.lastJobKey, newHeight);
-            return newMap;
-          });
-      
-          return { ...jobOptionsPrev, pixelWidth: newWidth, pixelHeight: newHeight };
+            setPixelWidthMapping((prevMapping) => {
+                const newMap = new Map(prevMapping);
+                newMap.set(jobOptionsPrev.lastJobKey, newWidth);
+                return newMap;
+            });
+
+            setPixelHeightMapping((prevMapping) => {
+                const newMap = new Map(prevMapping);
+                newMap.set(jobOptionsPrev.lastJobKey, newHeight);
+                return newMap;
+            });
+
+            return { ...jobOptionsPrev, pixelWidth: newWidth, pixelHeight: newHeight };
         });
-      };
+    };
 
     // When updating height:
     const updatePixelHeight = (newHeight: number) => {
         setJobOptions((prev) => {
             const jobOptionsPrev = prev;
-  
+
             let newWidth = jobOptionsPrev.pixelWidth;
             if (jobOptionsPrev.keepAspectRatio && jobOptionsPrev.pixelHeight) {
-              const ratio = jobOptionsPrev.pixelWidth / jobOptionsPrev.pixelHeight;
-              newWidth = Math.round(newHeight * ratio);
+                const ratio = jobOptionsPrev.pixelWidth / jobOptionsPrev.pixelHeight;
+                newWidth = Math.round(newHeight * ratio);
             }
-        
+
             setPixelWidthMapping((prevMapping) => {
-              const newMap = new Map(prevMapping);
-              newMap.set(jobOptionsPrev.lastJobKey, newWidth);
-              return newMap;
+                const newMap = new Map(prevMapping);
+                newMap.set(jobOptionsPrev.lastJobKey, newWidth);
+                return newMap;
             });
-  
+
             setPixelHeightMapping((prevMapping) => {
-              const newMap = new Map(prevMapping);
-              newMap.set(jobOptionsPrev.lastJobKey, newHeight);
-              return newMap;
+                const newMap = new Map(prevMapping);
+                newMap.set(jobOptionsPrev.lastJobKey, newHeight);
+                return newMap;
             });
-        
+
             return { ...jobOptionsPrev, pixelWidth: newWidth, pixelHeight: newHeight };
-          });
+        });
     };
 
-    // states
-    const [currentOptionsResizePercentage, setCurrentOptionsResizePercentage] = useState(50);
-    const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+    const updateResizePercentage = (newPercentage: number) => {
+        setJobOptions((prev) => {
+            const clampedPercentage = clamp(newPercentage);
 
-    const [pixelWidthMapping, setPixelWidthMapping] = useState(new Map<number, number>());
-    const [pixelHeightMapping, setPixelHeightMapping] = useState(new Map<number, number>());
-    const [resizePercentageMapping, setResizePercentageMapping] = useState(new Map<number, number>());
-    const [resizeTypeMapping, setResizeTypeMapping] = useState(new Map<number, string>());
-    const [keepAspectRatioMapping, setKeepAspectRatioMapping] = useState(new Map<number, boolean>());
+            const jobOptionsPrev = prev;
+            
+            let originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
+            let originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
 
-    const clamp = (value: number) => Math.min(99, Math.max(1, value));
-    const clampedResizePercentage = clamp(currentOptionsResizePercentage);
+            const newWidth = Math.round((originalWidth * clampedPercentage) / 100);
+            const newHeight = Math.round((originalHeight * clampedPercentage) / 100);
+
+            setPixelWidthMapping((prevMapping) => {
+                const newMap = new Map(prevMapping);
+                newMap.set(jobOptionsPrev.lastJobKey, newWidth);
+                return newMap;
+            });
+
+            setPixelHeightMapping((prevMapping) => {
+                const newMap = new Map(prevMapping);
+                newMap.set(jobOptionsPrev.lastJobKey, newHeight);
+                return newMap;
+            });
+
+            return {
+                ...prev,
+                resizePercentage: clampedPercentage,
+                pixelWidth: newWidth,
+                pixelHeight: newHeight,
+            };
+        });
+    }
+
 
     const handleCardClick = (options: {
         lastJobKey: number;
@@ -139,7 +183,16 @@ export default function Resize() {
                     });
                 })
             );
-            setUploadedImages((prev) => [...prev, ...newImages]);
+
+            // Update the state Map by adding each new image.
+            setUploadedImagesMapping((prev) => {
+                const newMap = new Map(prev);
+                newImages.forEach((img) => {
+
+                    newMap.set(generateUniqueId(img.file.name), img);
+                });
+                return newMap;
+            }); 
         }
     };
 
@@ -166,12 +219,13 @@ export default function Resize() {
                     h-full
                     `}
                 >
-                    {uploadedImages.length === 0 ? (
+                    {uploadedImagesMapping.size === 0 ? (
                         <Text>No images uploaded</Text>
                     ) : (
-                        uploadedImages.map((img, index) => (
+                        [...uploadedImagesMapping.entries()].map(([index, img]) => (
                             <ResizeImageJobCard
                                 key={index}
+                                file={img.file}
                                 cardKey={index}
                                 previewUrl={img.previewUrl}
                                 fileName={img.file.name}
@@ -202,7 +256,6 @@ export default function Resize() {
                                     })
                                 }
 
-                                algorithmChosen={"Bilinear"}
                                 onCardClick={handleCardClick}
                             />
                         ))
@@ -222,14 +275,14 @@ export default function Resize() {
                     }
                     resizePercentage={jobOptions.resizePercentage}
                     setResizePercentage={(value) =>
-                        setJobOptions((prev) => ({ ...prev, resizePercentage: value }))
+                        updateResizePercentage(value)
                     }
                     keepAspectRatio={jobOptions.keepAspectRatio}
                     onKeepAspectRatioChange={(value) =>
                         setJobOptions((prev) => ({ ...prev, keepAspectRatio: value }))
                     }
                     resizeType={jobOptions.resizeType}
-                    setResizeType={(value) => setJobOptions((prev) => ({ ...prev, resizeType: value }))}
+                    setResizeType={(value) => setJobOptions((prev) => { return { ...prev, resizeType: value } })}
                 >
                     <IconButton
                         id="upload-image-button"
@@ -237,7 +290,7 @@ export default function Resize() {
                         color="amber"
                         radius="full"
                         size="3"
-                        /* necessary inline styling to override radix ui styles */
+                        /* nedeed inline styling to override radix ui styles */
                         style={{ position: "absolute", transform: "translate(-60px, 30px)", cursor: "pointer" }}
                         onClick={handleUploadButtonClick}
                     >

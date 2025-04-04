@@ -13,7 +13,7 @@ import (
 // AuthMiddleware checks for a valid JWT token in the Authorization header
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get the Authorization header
+		// Get the Authorization header.
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			logger.Log.Warn("Missing Authorization header")
@@ -31,7 +31,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Validate the JWT token
+		// Validate the JWT token.
 		token, err := util.ValidateJWT(tokenString)
 		if err != nil || !token.Valid {
 			logger.Log.Warnf("Invalid token: %v", err)
