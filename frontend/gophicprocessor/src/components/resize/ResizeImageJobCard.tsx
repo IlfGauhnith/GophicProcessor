@@ -3,15 +3,27 @@
 import { Box, Card, Inset, Separator, Text, Flex, Select, IconButton, Spinner } from "@radix-ui/themes";
 import Image from "next/image";
 import React, { useState } from "react";
-import { EnterIcon, DownloadIcon } from "@radix-ui/react-icons"; // Adjust imports if needed
+import { EnterIcon, DownloadIcon } from "@radix-ui/react-icons";
 
-type ResizeImageJobCardProps = {
-  imageUrl: string;
+export type ResizeImageJobCardProps = {
+  cardKey: number;
+  previewUrl: string;
   fileName: string;
-  originalSize: [number, number]; // [width, height]
-  targetSize: [number, number];   // [width, height]
   algorithmChosen: string;
-  algorithmOptions?: string[];
+  originalPixelWidth: number;
+  originalPixelHeight: number;
+  targetPixelWidth: number;
+  setTargetPixelWidth: (value: number) => void;
+  targetPixelHeight: number;
+  setTargetPixelHeight: (value: number) => void;
+  onCardClick: (options: {
+    lastJobKey: number;
+    resizePercentage: number;
+    pixelWidth: number;
+    pixelHeight: number;
+    resizeType: "percentage" | "pixel";
+    keepAspectRatio: boolean;
+  }) => void;
 };
 
 const algorithms = [
@@ -23,22 +35,38 @@ const algorithms = [
 ];
 
 export default function ResizeImageJobCard({
-  imageUrl,
+  cardKey,
+  previewUrl,
   fileName,
-  originalSize,
-  targetSize,
   algorithmChosen,
-  algorithmOptions = algorithms,
+  originalPixelWidth,
+  originalPixelHeight,
+  targetPixelWidth,
+  setTargetPixelWidth,
+  targetPixelHeight,
+  setTargetPixelHeight,
+  onCardClick,
 }: ResizeImageJobCardProps) {
 
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(algorithmChosen);
-  // Manage job state: "idle" | "processing" | "processed"
+  const [algorithmOptions] = useState(algorithms);
   const [jobStatus, setJobStatus] = useState<"idle" | "processing" | "processed">("idle");
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCardClick({
+      lastJobKey: cardKey,
+      resizePercentage: 50,
+      pixelWidth: targetPixelWidth,
+      pixelHeight: targetPixelHeight,
+      resizeType: "percentage",
+      keepAspectRatio: true,
+    });
+  };
 
   const handleSendJob = async () => {
     setJobStatus("processing");
     try {
-      // Replace this timeout with your actual API call.
       await new Promise((resolve) => setTimeout(resolve, 2000));
       setJobStatus("processed");
     } catch (error) {
@@ -48,11 +76,12 @@ export default function ResizeImageJobCard({
   };
 
   return (
-    <Box>
+    // Wrap the entire card in a clickable container.
+    <Box onClick={handleCardClick} style={{ cursor: "pointer" }}>
       <Card size="2" className="h-full w-full">
         <Inset clip="padding-box" side="top" pb="current">
           <Image
-            src={imageUrl}
+            src={previewUrl}
             alt="Uploaded image preview"
             width={100}
             height={50}
@@ -67,13 +96,17 @@ export default function ResizeImageJobCard({
 
         <Flex align="center" justify="center" gap="2" p="2" m={{ initial: "1", md: "2" }}>
           <Box className="bg-amber-100 p-1 rounded-lg">
-            <Text>{originalSize[0]}x{originalSize[1]}</Text>
+            <Text>
+              {originalPixelWidth}x{originalPixelHeight}
+            </Text>
           </Box>
           <Box>
             <Text>→</Text>
           </Box>
           <Box className="bg-amber-200 p-1 rounded-lg">
-            <Text>{targetSize[0]}x{targetSize[1]}</Text>
+            <Text>
+              {targetPixelWidth}x{targetPixelHeight}
+            </Text>
           </Box>
         </Flex>
 
@@ -105,7 +138,10 @@ export default function ResizeImageJobCard({
                 variant="soft"
                 className="cursor-pointer"
                 color="green"
-                onClick={handleSendJob}
+                onClick={(e) => {
+                  e.stopPropagation(); // prevent card's onClick from firing
+                  handleSendJob();
+                }}
               >
                 <EnterIcon width="15" height="15" />
               </IconButton>
@@ -113,7 +149,7 @@ export default function ResizeImageJobCard({
           )}
 
           {jobStatus === "processing" && (
-            <Box className="flex justify-center content-center">
+            <Box className="flex justify-center items-center" style={{ width: 40, height: 40 }}>
               <Spinner size="3" />
             </Box>
           )}
@@ -125,7 +161,6 @@ export default function ResizeImageJobCard({
               </IconButton>
             </Box>
           )}
-
         </Flex>
       </Card>
     </Box>
