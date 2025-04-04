@@ -1,10 +1,9 @@
 "use client";
 
 import Header from "@/components/Header";
-import { Box, Flex, Grid, Tabs, Text, Switch, Separator, IconButton } from "@radix-ui/themes";
+import {Flex, Grid, Text, IconButton } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
-import { useEffect, useRef, useState } from "react";
-import * as Slider from "@radix-ui/react-slider";
+import {useRef, useState } from "react";
 import ResizeImageJobCard from "@/components/resize/ResizeImageJobCard";
 import styles from "../../styles/Resize.module.css"
 import { PlusIcon } from "@radix-ui/react-icons";
@@ -112,8 +111,8 @@ export default function Resize() {
 
             const jobOptionsPrev = prev;
             
-            let originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
-            let originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
+            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
+            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
 
             const newWidth = Math.round((originalWidth * clampedPercentage) / 100);
             const newHeight = Math.round((originalHeight * clampedPercentage) / 100);
@@ -233,28 +232,7 @@ export default function Resize() {
                                 originalPixelHeight={img.height}
 
                                 targetPixelWidth={pixelWidthMapping.get(index) ?? img.width}
-                                setTargetPixelWidth={
-                                    (value) => setJobOptions((prev) => {
-                                        setPixelWidthMapping((prev) => {
-                                            const newMap = new Map(prev);
-                                            newMap.set(index, value);
-                                            return newMap;
-                                        });
-                                        return { ...prev, pixelWidth: value }
-                                    })
-                                }
-
                                 targetPixelHeight={pixelHeightMapping.get(index) ?? img.height}
-                                setTargetPixelHeight={
-                                    (value) => setJobOptions((prev) => {
-                                        setPixelHeightMapping((prev) => {
-                                            const newMap = new Map(prev);
-                                            newMap.set(index, value);
-                                            return newMap;
-                                        });
-                                        return { ...prev, pixelHeight: value }
-                                    })
-                                }
 
                                 onCardClick={handleCardClick}
                             />

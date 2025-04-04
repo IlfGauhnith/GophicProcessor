@@ -1,9 +1,9 @@
 "use client";
 
-import { Box, Flex, Tabs, Text, Switch, Separator, IconButton } from "@radix-ui/themes";
+import { Box, Flex, Tabs, Text, Switch, Separator } from "@radix-ui/themes";
 import * as Slider from "@radix-ui/react-slider";
-import React, { Children, useState } from "react";
-import { PlusIcon } from "@radix-ui/react-icons";
+import React, { useState } from "react";
+
 
 export type JobOptionsProps = {
     pixelWidth: number;

@@ -4,12 +4,16 @@ if (!apiUrl) {
     throw new Error("Environment variable NEXT_PUBLIC_GOPHIC_PROCESSOR_API_URL is not defined.");
 }
 
+interface JobResponse {
+  job_id: string;
+}
+
 export async function sendJob(
   imageBase64: string,
   algorithm: string,
   targetWidth: number,
   targetHeight: number
-): Promise<any> {
+): Promise<JobResponse> {
 
   // Retrieve the auth token from local storage.
   const token = localStorage.getItem("authToken");
@@ -43,11 +47,17 @@ export async function sendJob(
   return await response.json();
 }
 
+interface JobStatusResponse {
+  job_uuid: string;
+  status: "Completed" | "In Progress" | "NotFound" | string;
+  // add any other properties if needed
+}
+
 /**
  * Sends a GET request to check the status of a job.
  * Assumes the endpoint is: `${apiUrl}/jobs/{jobId}`
  */
-export async function checkJobStatus(jobId: string): Promise<any> {
+export async function checkJobStatus(jobId: string): Promise<JobStatusResponse> {
   const token = localStorage.getItem("authToken");
   if (!token) {
     throw new Error("No auth token found in localStorage.");
@@ -63,7 +73,7 @@ export async function checkJobStatus(jobId: string): Promise<any> {
 
   // If a 404 is received, return a special value instead of throwing.
   if (response.status === 404) {
-    return { status: "NotFound" };
+    return { job_uuid: "", status: "NotFound" };
   }
 
   if (!response.ok) {
@@ -78,7 +88,7 @@ export async function pollJobStatus(
   jobId: string,
   interval: number = 2000,
   timeout: number = 300000 // 5 minutes
-): Promise<any> {
+): Promise<string> {
   const startTime = Date.now();
   while (true) {
     const statusData = await checkJobStatus(jobId);

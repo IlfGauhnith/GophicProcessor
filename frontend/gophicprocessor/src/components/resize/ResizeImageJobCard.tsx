@@ -14,9 +14,7 @@ export type ResizeImageJobCardProps = {
   originalPixelWidth: number;
   originalPixelHeight: number;
   targetPixelWidth: number;
-  setTargetPixelWidth: (value: number) => void;
   targetPixelHeight: number;
-  setTargetPixelHeight: (value: number) => void;
   onCardClick: (options: {
     lastJobKey: number;
     resizePercentage: number;
@@ -43,9 +41,7 @@ export default function ResizeImageJobCard({
   originalPixelWidth,
   originalPixelHeight,
   targetPixelWidth,
-  setTargetPixelWidth,
   targetPixelHeight,
-  setTargetPixelHeight,
   onCardClick,
 }: ResizeImageJobCardProps) {
 
