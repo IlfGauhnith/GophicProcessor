@@ -1,6 +1,8 @@
 # Use Golang 1.24.1 based on Alpine
 FROM golang:1.24.1-alpine
 
+RUN apk update && apk add --no-cache bash
+
 WORKDIR /app
 
 # Copy the go.work file to enable multi-module workspace

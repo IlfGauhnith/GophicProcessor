@@ -1,16 +1,10 @@
 # Use Golang 1.24.1 on Alpine
 FROM golang:1.24.1-alpine
 
-# Install Bash, curl, and AWS CLI
-RUN apk update && apk add --no-cache bash curl
-
-# Download and install AWS CLI
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && \
-    ./aws/install && \
-    rm -rf awscliv2.zip ./aws
+RUN apk update && apk add --no-cache bash
 
 WORKDIR /app
+
 
 # Copy the go.work file to enable multi-module workspace
 COPY go.work ./
