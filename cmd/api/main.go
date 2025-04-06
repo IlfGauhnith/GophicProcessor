@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	_ "github.com/IlfGauhnith/GophicProcessor/pkg/config"
@@ -16,7 +17,12 @@ import (
 )
 
 func main() {
-	port := ":8080"
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // fallback
+	}
+
 	logger.Log.Info("Starting API server")
 
 	// Run shutdown signal handling in a separate goroutine
