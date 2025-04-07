@@ -131,6 +131,6 @@ func GoogleAuthCallBackHandler(c *gin.Context) {
 
 	// Redirect to frontend with JWT and user info as query parameters
 	frontendURL := os.Getenv("FRONTEND_URL")
-	redirectURL := fmt.Sprintf("%s/OAuthCallback?token=%s&name=%s&email=%s", frontendURL, jwt, googleUserInfoStruct.Name, googleUserInfoStruct.Email)
+	redirectURL := fmt.Sprintf("%s/OAuthCallback?token=%s&name=%s&email=%s&user_picture_url=%s", frontendURL, jwt, googleUserInfoStruct.Name, googleUserInfoStruct.Email, googleUserInfoStruct.Picture)
 	c.Redirect(http.StatusFound, redirectURL)
 }

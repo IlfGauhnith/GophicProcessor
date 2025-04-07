@@ -11,11 +11,13 @@ function OAuthCallbackContent() {
     const token = searchParams.get("token");
     const name = searchParams.get("name");
     const email = searchParams.get("email");
+    const avatar_url = searchParams.get("user_picture_url");
 
     if (token) {
       localStorage.setItem("authToken", token);
       localStorage.setItem("userName", name || "");
       localStorage.setItem("userEmail", email || "");
+      localStorage.setItem("userPictureUrl", avatar_url || "");
       router.push("/");
     }
   }, [router, searchParams]);

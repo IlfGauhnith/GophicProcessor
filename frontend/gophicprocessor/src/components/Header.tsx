@@ -126,6 +126,8 @@ export default function Header() {
                 </Popover>
 
                 <div className="border-l-2 border-[#2E0C1F] h-8" />
+
+                {/* mobile login button */}
                 <div className="sm:hidden mr-0">
                     <Button id="login-button"
                         onClick={() => router.push("/Login")}
@@ -150,6 +152,7 @@ export default function Header() {
                         Login
                     </Button>
                 </div>
+                {/* desk login button */}
                 <div className="hidden sm:block">
                     <GoogleLoginButton />
                 </div>
