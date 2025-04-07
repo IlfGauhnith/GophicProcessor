@@ -56,9 +56,12 @@ export default function Resize() {
         setJobOptions((prev) => {
             const jobOptionsPrev = prev;
 
+            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
+            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
+
             let newHeight = jobOptionsPrev.pixelHeight;
             if (jobOptionsPrev.keepAspectRatio && jobOptionsPrev.pixelWidth) {
-                const ratio =jobOptionsPrev.pixelHeight / jobOptionsPrev.pixelWidth;
+                const ratio = originalHeight / originalWidth;
                 newHeight = Math.round(newWidth * ratio);
             }
 
@@ -83,9 +86,13 @@ export default function Resize() {
         setJobOptions((prev) => {
             const jobOptionsPrev = prev;
 
+            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
+            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
+
+            
             let newWidth = jobOptionsPrev.pixelWidth;
             if (jobOptionsPrev.keepAspectRatio && jobOptionsPrev.pixelHeight) {
-                const ratio = jobOptionsPrev.pixelWidth / jobOptionsPrev.pixelHeight;
+                const ratio = originalWidth / originalHeight;
                 newWidth = Math.round(newHeight * ratio);
             }
 

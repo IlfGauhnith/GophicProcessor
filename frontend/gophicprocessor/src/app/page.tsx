@@ -21,6 +21,7 @@ export default function HomePage() {
           id="gophic-logo"
           src="/GophicProcessor-Logo.png"
           alt="GophicProcessor Logo"
+          priority={true}
           width={150}
           height={150}
           className="
