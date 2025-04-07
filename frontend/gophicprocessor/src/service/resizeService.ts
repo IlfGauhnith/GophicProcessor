@@ -17,9 +17,6 @@ export async function sendJob(
 
   // Retrieve the auth token from local storage.
   const token = localStorage.getItem("authToken");
-  if (!token) {
-    throw new Error("No auth token found in localStorage.");
-  }
 
   // Build the request body.
   const body = {
@@ -59,9 +56,6 @@ interface JobStatusResponse {
  */
 export async function checkJobStatus(jobId: string): Promise<JobStatusResponse> {
   const token = localStorage.getItem("authToken");
-  if (!token) {
-    throw new Error("No auth token found in localStorage.");
-  }
 
   const response = await fetch(`${apiUrl}/resize-images/status/${jobId}`, {
     method: "GET",
@@ -111,9 +105,6 @@ export async function pollJobStatus(
 
 export async function getJobResult(jobId: string): Promise<{ images: string[] }> {
   const token = localStorage.getItem("authToken");
-  if (!token) {
-    throw new Error("No auth token found in localStorage.");
-  }
 
   const response = await fetch(`${apiUrl}/resize-images/${jobId}`, {
     method: "GET",
