@@ -19,6 +19,6 @@ export default function GoogleLoginButton() {
   }
 
   return (
-    <GoogleButton onClick={handleGoogleLogin} />
+    <GoogleButton onClick={handleGoogleLogin}/>
   );
 }

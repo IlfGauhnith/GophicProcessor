@@ -24,14 +24,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-.tw-center {
-  /* Normal Tailwind classes without !important */
-  @apply flex items-center justify-center;
-}
-
-/* Then, re-declare the same selector with manual !important as needed */
-.tw-center {
-  align-items: center !important;
-  justify-content: center !important;
-}

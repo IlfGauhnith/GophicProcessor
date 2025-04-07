@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Gophic Processor",
   description: "Gopher process your image!",
+  viewport: "width=device-width, initial-scale=1.0",
 };
 
 export default function RootLayout({

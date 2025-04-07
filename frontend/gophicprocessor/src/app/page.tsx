@@ -12,7 +12,10 @@ export default function HomePage() {
       <Header />
       <Flex
         id="main-flex"
-        className="tw-center flex-1 w-full h-full items-center justify-center"
+        className="flex flex-1 w-full h-full items-center justify-center"
+
+        /* needed inline style to override radix-ui */
+        style={{alignItems: "center", justifyContent: "center"}}
       >
         <Image
           id="gophic-logo"
