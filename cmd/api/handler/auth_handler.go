@@ -30,8 +30,16 @@ func GoogleAuthHandler(c *gin.Context) {
 		return
 	}
 
-	// Store the state in a cookie (valid for 1 hour)
-	c.SetCookie("oauthstate", state, 3600, "", "", false, true)
+	stage := util.GetStage()
+
+	if stage == "DEV" {
+		// Store the state in a cookie (valid for 1 hour)
+		c.SetCookie("oauthstate", state, 3600, "", "", false, true)
+	} else if stage == "PROD" {
+		APIDomain := os.Getenv("API_DOMAIN")
+		c.SetCookie("oauthstate", state, 3600, "/", APIDomain, true, true)
+
+	}
 
 	// Send redirect url as googleUrl
 	url := auth.GetAuthURL(state)

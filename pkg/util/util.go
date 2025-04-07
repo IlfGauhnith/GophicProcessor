@@ -14,6 +14,16 @@ import (
 	"github.com/IlfGauhnith/GophicProcessor/pkg/mq"
 )
 
+func GetStage() string {
+	stage := os.Getenv("STAGE")
+
+	if stage == "" {
+		stage = "PROD"
+	}
+
+	return stage
+}
+
 func WaitForShutdown() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
