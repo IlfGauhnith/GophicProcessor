@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button, Popover } from "@headlessui/react";
@@ -12,6 +12,13 @@ import { Box, Flex } from "@radix-ui/themes";
 
 export default function Header() {
     const router = useRouter();
+
+    const [userPictureUrl, setUserPictureUrl] = useState<string | null>(null);
+    useEffect(() => {
+        // When the component mounts, read the profile picture URL from localStorage.
+        const storedUrl = localStorage.getItem("userPictureUrl");
+        setUserPictureUrl(storedUrl);
+    }, []);
 
     return (
         <header
@@ -127,35 +134,50 @@ export default function Header() {
 
                 <div className="border-l-2 border-[#2E0C1F] h-8" />
 
-                {/* mobile login button */}
-                <div className="sm:hidden mr-0">
-                    <Button id="login-button"
-                        onClick={() => router.push("/Login")}
-                        className="
-                    relative
-                    focus:outline-none
-                    px-4 
-                    py-2 
-                    mr-0
-                    bg-[#e5a524] 
-                    text-[#2E0C1F] 
-                    rounded 
-                    data-[hover]:text-white
-                    font-bold
-                    transition-transform
-                    transform-gpu /* Ensures that the transform is hardware accelerated. */
-                    duration-200 /* 200ms duration */
-                    data-[hover]:scale-105
-                    data-[hover]:translate-0.5
-                    data-[hover]:cursor-pointer
-                    ">
-                        Login
-                    </Button>
-                </div>
-                {/* desk login button */}
-                <div className="hidden sm:block">
-                    <GoogleLoginButton />
-                </div>
+                {userPictureUrl ? (
+                    <Image
+                        src={userPictureUrl}
+                        alt="User Profile"
+                        width={40}
+                        height={40}
+                        className="rounded-full cursor-pointer"
+                    />
+                ) : (
+                    <div>
+
+                        {/* mobile login button */}
+                        <div className="sm:hidden mr-0">
+                            <Button id="login-button"
+                                onClick={() => router.push("/Login")}
+                                className="
+                        relative
+                        focus:outline-none
+                        px-4 
+                        py-2 
+                        mr-0
+                        bg-[#e5a524] 
+                        text-[#2E0C1F] 
+                        rounded 
+                        data-[hover]:text-white
+                        font-bold
+                        transition-transform
+                        transform-gpu /* Ensures that the transform is hardware accelerated. */
+                        duration-200 /* 200ms duration */
+                        data-[hover]:scale-105
+                        data-[hover]:translate-0.5
+                        data-[hover]:cursor-pointer
+                        ">
+                                Login
+                            </Button>
+                        </div>
+
+                        {/* desk login button */}
+                        <div className="hidden sm:block">
+                            <GoogleLoginButton />
+                        </div>
+                    </div>
+                )}
+
             </Flex>
         </header>
     );
