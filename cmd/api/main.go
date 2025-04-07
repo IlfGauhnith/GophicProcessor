@@ -23,6 +23,8 @@ func main() {
 		port = "8080" // fallback
 	}
 
+	frontendURL := os.Getenv("FRONTEND_URL")
+
 	logger.Log.Info("Starting API server")
 
 	// Run shutdown signal handling in a separate goroutine
@@ -35,7 +37,7 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // React dev server origin
+		AllowOrigins:     []string{frontendURL},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
