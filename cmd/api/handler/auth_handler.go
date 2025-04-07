@@ -37,6 +37,7 @@ func GoogleAuthHandler(c *gin.Context) {
 		c.SetCookie("oauthstate", state, 3600, "", "", false, true)
 	} else if stage == "PROD" {
 		APIDomain := os.Getenv("API_DOMAIN")
+		c.SetSameSite(http.SameSiteNoneMode)
 		c.SetCookie("oauthstate", state, 3600, "/", APIDomain, true, true)
 
 	}
