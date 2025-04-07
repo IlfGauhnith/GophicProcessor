@@ -89,8 +89,7 @@ func GeneratePresignedURL(fileName string) (string, error) {
 		Key:    aws.String(fileName),
 	})
 
-	// Presign the request for 10 days.
-	urlStr, err := req.Presign(240 * time.Hour)
+	urlStr, err := req.Presign(432000 * time.Second) // 5 days expiration
 	if err != nil {
 		return "", fmt.Errorf("failed to sign request: %v", err)
 	}
