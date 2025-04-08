@@ -1,9 +1,9 @@
 "use client";
 
 import Header from "@/components/Header";
-import {Flex, Grid, Text, IconButton } from "@radix-ui/themes";
+import { Flex, Grid, Text, IconButton } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
-import {useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ResizeImageJobCard from "@/components/resize/ResizeImageJobCard";
 import styles from "../../styles/Resize.module.css"
 import { PlusIcon } from "@radix-ui/react-icons";
@@ -29,7 +29,7 @@ export default function Resize() {
 
     // Global job options state.
     const [jobOptions, setJobOptions] = useState({
-        lastJobKey: 0,
+        currentJobKey: 0,
         resizeType: "percentage" as "percentage" | "pixel",
         resizePercentage: 50,
         pixelWidth: 640,
@@ -56,8 +56,8 @@ export default function Resize() {
         setJobOptions((prev) => {
             const jobOptionsPrev = prev;
 
-            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
-            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
+            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.currentJobKey)?.width ?? 0;
+            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.currentJobKey)?.height ?? 0;
 
             let newHeight = jobOptionsPrev.pixelHeight;
             if (jobOptionsPrev.keepAspectRatio && jobOptionsPrev.pixelWidth) {
@@ -67,13 +67,13 @@ export default function Resize() {
 
             setPixelWidthMapping((prevMapping) => {
                 const newMap = new Map(prevMapping);
-                newMap.set(jobOptionsPrev.lastJobKey, newWidth);
+                newMap.set(jobOptionsPrev.currentJobKey, newWidth);
                 return newMap;
             });
 
             setPixelHeightMapping((prevMapping) => {
                 const newMap = new Map(prevMapping);
-                newMap.set(jobOptionsPrev.lastJobKey, newHeight);
+                newMap.set(jobOptionsPrev.currentJobKey, newHeight);
                 return newMap;
             });
 
@@ -86,10 +86,10 @@ export default function Resize() {
         setJobOptions((prev) => {
             const jobOptionsPrev = prev;
 
-            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
-            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
+            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.currentJobKey)?.width ?? 0;
+            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.currentJobKey)?.height ?? 0;
 
-            
+
             let newWidth = jobOptionsPrev.pixelWidth;
             if (jobOptionsPrev.keepAspectRatio && jobOptionsPrev.pixelHeight) {
                 const ratio = originalWidth / originalHeight;
@@ -98,13 +98,13 @@ export default function Resize() {
 
             setPixelWidthMapping((prevMapping) => {
                 const newMap = new Map(prevMapping);
-                newMap.set(jobOptionsPrev.lastJobKey, newWidth);
+                newMap.set(jobOptionsPrev.currentJobKey, newWidth);
                 return newMap;
             });
 
             setPixelHeightMapping((prevMapping) => {
                 const newMap = new Map(prevMapping);
-                newMap.set(jobOptionsPrev.lastJobKey, newHeight);
+                newMap.set(jobOptionsPrev.currentJobKey, newHeight);
                 return newMap;
             });
 
@@ -117,22 +117,22 @@ export default function Resize() {
             const clampedPercentage = clamp(newPercentage);
 
             const jobOptionsPrev = prev;
-            
-            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.width ?? 0;
-            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.lastJobKey)?.height ?? 0;
+
+            const originalWidth = uploadedImagesMapping.get(jobOptionsPrev.currentJobKey)?.width ?? 0;
+            const originalHeight = uploadedImagesMapping.get(jobOptionsPrev.currentJobKey)?.height ?? 0;
 
             const newWidth = Math.round((originalWidth * clampedPercentage) / 100);
             const newHeight = Math.round((originalHeight * clampedPercentage) / 100);
 
             setPixelWidthMapping((prevMapping) => {
                 const newMap = new Map(prevMapping);
-                newMap.set(jobOptionsPrev.lastJobKey, newWidth);
+                newMap.set(jobOptionsPrev.currentJobKey, newWidth);
                 return newMap;
             });
 
             setPixelHeightMapping((prevMapping) => {
                 const newMap = new Map(prevMapping);
-                newMap.set(jobOptionsPrev.lastJobKey, newHeight);
+                newMap.set(jobOptionsPrev.currentJobKey, newHeight);
                 return newMap;
             });
 
@@ -147,7 +147,7 @@ export default function Resize() {
 
 
     const handleCardClick = (options: {
-        lastJobKey: number;
+        currentJobKey: number;
         resizePercentage: number;
         pixelWidth: number;
         pixelHeight: number;
@@ -164,10 +164,12 @@ export default function Resize() {
         const files = e.target.files;
         if (files) {
             const newImages: UploadedImage[] = await Promise.all(
-                Array.from(files).map((file) => {
+                Array.from(files).map((file, index) => {
                     const previewUrl = URL.createObjectURL(file);
+
                     return new Promise<UploadedImage>((resolve) => {
                         const img = new Image();
+
                         img.onload = () => {
                             resolve({
                                 file,
@@ -190,15 +192,29 @@ export default function Resize() {
                 })
             );
 
-            // Update the state Map by adding each new image.
-            setUploadedImagesMapping((prev) => {
-                const newMap = new Map(prev);
-                newImages.forEach((img) => {
+            // Create a new Map from current mapping plus the new images.
+            const newMap = new Map(uploadedImagesMapping);
+            newImages.forEach((img) => {
+                newMap.set(generateUniqueId(img.file.name), img);
+            });
 
-                    newMap.set(generateUniqueId(img.file.name), img);
-                });
-                return newMap;
-            }); 
+            // Update the state with this new Map.
+            setUploadedImagesMapping(newMap);
+
+            // Set the current job key to the index of the file.
+            // That way the job options will be set to the last uploaded image.
+            // This is important for the user experience, as the user will have job options default set to the last inage uploaded.
+            const lastKey = Array.from(newMap.keys()).pop() ?? 0;
+            const lastWidth = newMap.get(lastKey)?.width ?? 0;
+            const lastHeight = newMap.get(lastKey)?.height ?? 0;
+            setJobOptions({
+                currentJobKey: lastKey,
+                resizeType: "pixel",
+                resizePercentage: 50,
+                pixelWidth: lastWidth,
+                pixelHeight: lastHeight,
+                keepAspectRatio: true,
+            });
         }
     };
 
@@ -241,6 +257,7 @@ export default function Resize() {
                                 targetPixelWidth={pixelWidthMapping.get(index) ?? img.width}
                                 targetPixelHeight={pixelHeightMapping.get(index) ?? img.height}
 
+                                chosen={jobOptions.currentJobKey === index}
                                 onCardClick={handleCardClick}
                             />
                         ))

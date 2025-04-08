@@ -1,0 +1,19 @@
+@keyframes levitate {
+  0% {
+    transform: translateY(0px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    transform: translate(2px, -10px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    transform: translateY(0px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Animation class */
+.levitate {
+  animation: levitate 3s ease-in-out infinite;
+}

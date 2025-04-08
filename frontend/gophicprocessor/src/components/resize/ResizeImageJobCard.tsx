@@ -5,18 +5,21 @@ import Image from "next/image";
 import React, { useState } from "react";
 import { EnterIcon, DownloadIcon } from "@radix-ui/react-icons";
 import { sendJob, pollJobStatus, getJobResult } from "../../service/resizeService";
+import classNames from "classnames";
+import styles from "../../styles/ResizeImageJobCard.module.css"
 
 export type ResizeImageJobCardProps = {
   cardKey: number;
   previewUrl: string;
   file: File;
   fileName: string;
+  chosen: boolean;
   originalPixelWidth: number;
   originalPixelHeight: number;
   targetPixelWidth: number;
   targetPixelHeight: number;
   onCardClick: (options: {
-    lastJobKey: number;
+    currentJobKey: number;
     resizePercentage: number;
     pixelWidth: number;
     pixelHeight: number;
@@ -43,6 +46,7 @@ export default function ResizeImageJobCard({
   targetPixelWidth,
   targetPixelHeight,
   onCardClick,
+  chosen,
 }: ResizeImageJobCardProps) {
 
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(algorithms[0]);
@@ -53,7 +57,7 @@ export default function ResizeImageJobCard({
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onCardClick({
-      lastJobKey: cardKey,
+      currentJobKey: cardKey,
       resizePercentage: 50,
       pixelWidth: targetPixelWidth,
       pixelHeight: targetPixelHeight,
@@ -63,12 +67,12 @@ export default function ResizeImageJobCard({
   };
 
   const handleSendJob = async () => {
-    
+
     function stripDataUriPrefix(dataUri: string): string {
       const commaIndex = dataUri.indexOf(',');
       return commaIndex !== -1 ? dataUri.substring(commaIndex + 1) : dataUri;
     }
-    
+
     setJobStatus("processing");
 
     try {
@@ -81,7 +85,7 @@ export default function ResizeImageJobCard({
       });
 
       imageBase64 = stripDataUriPrefix(imageBase64);
-      
+
       const algorithm = selectedAlgorithm[1];
       const targetWidth = targetPixelWidth;
       const targetHeight = targetPixelHeight;
@@ -101,7 +105,7 @@ export default function ResizeImageJobCard({
       setJobStatus("idle");
     }
   };
-  
+
   const handleDownloadJob = async () => {
     try {
       if (!jobAPIuuid) {
@@ -112,17 +116,17 @@ export default function ResizeImageJobCard({
       const images = result.images;
       if (images && images.length > 0) {
         const downloadUrl = images[0]; // Get the first image URL
-        
+
         // Fetch the file as a Blob
         const response = await fetch(downloadUrl);
         if (!response.ok) {
           throw new Error("Failed to fetch the image for download");
         }
         const blob = await response.blob();
-        
+
         // Create an object URL from the Blob
         const blobUrl = URL.createObjectURL(blob);
-        
+
         // Create a temporary anchor element and trigger a download
         const a = document.createElement("a");
         a.href = blobUrl;
@@ -130,7 +134,7 @@ export default function ResizeImageJobCard({
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        
+
         // Revoke the object URL after a short delay to release memory
         setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
       } else {
@@ -144,7 +148,13 @@ export default function ResizeImageJobCard({
 
   return (
     // Wrap the entire card in a clickable container.
-    <Box onClick={handleCardClick} style={{ cursor: "pointer" }}>
+    <Box
+      onClick={handleCardClick}
+      style={{ cursor: "pointer" }}
+      className={classNames(
+        chosen ? `${styles.levitate}` : ""
+      )}
+    >
       <Card size="2" className="h-full w-full">
         <Inset clip="padding-box" side="top" pb="current">
           <Image
