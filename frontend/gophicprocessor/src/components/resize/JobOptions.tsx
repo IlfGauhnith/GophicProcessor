@@ -64,7 +64,7 @@ export type JobOptionsProps = {
                     defaultValue={resizeType} 
                     onValueChange={(value) => setResizeType(value as "percentage" | "pixel")}
                 >
-                    <Tabs.List id="resize-by-options-tabs-list" color="gray" className="flex w-full">
+                    <Tabs.List id="resize-by-options-tabs-list" color="gray" className="flex flex-col sm:flex-row w-full">
                         <Tabs.Trigger
                             id="resize-by-options-tabs-trigger-percentage"
                             value="percentage"
