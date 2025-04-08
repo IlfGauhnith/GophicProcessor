@@ -3,7 +3,7 @@
 import Header from "@/components/Header";
 import { Flex, Grid, Text, IconButton } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import ResizeImageJobCard from "@/components/resize/ResizeImageJobCard";
 import styles from "../../styles/Resize.module.css"
 import { PlusIcon } from "@radix-ui/react-icons";
@@ -164,7 +164,7 @@ export default function Resize() {
         const files = e.target.files;
         if (files) {
             const newImages: UploadedImage[] = await Promise.all(
-                Array.from(files).map((file, index) => {
+                Array.from(files).map((file) => {
                     const previewUrl = URL.createObjectURL(file);
 
                     return new Promise<UploadedImage>((resolve) => {
