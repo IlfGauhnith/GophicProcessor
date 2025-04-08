@@ -198,7 +198,7 @@ export default function ResizeImageJobCard({
             }}
           >
             <Select.Trigger>
-              <Text>{selectedAlgorithm}</Text>
+              <Text>{selectedAlgorithm[0]}</Text>
             </Select.Trigger>
             <Select.Content>
               {algorithmOptions.map((algorithm) => (
