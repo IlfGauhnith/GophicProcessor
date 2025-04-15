@@ -36,4 +36,15 @@ export const welcomeSteps: WelcomeStep[] = [
       imageWidth: 1200,
       imageHeight: 600,
     },
+    {
+      title: "Crafted by Lucas Burle",
+      titleColor: "#171717",
+      subtitle: "Built with care, code, and coffee ☕",
+      text: "Gophic Processor is a personal project developed by Lucas Burle, a software engineer passionate about concurrency, clean architecture, and accessible tools.\n\n[GitHub](https://github.com/IlfGauhnith) • [LinkedIn](https://www.linkedin.com/in/lucas-burle-121551165/) • [Email me](mailto:lucasbburle@gmail.com)",
+      textColor: "#171717",
+      imageUrl: "/welcome3.png",
+      bgColor: "#FBE6B8",
+      imageWidth: 500,
+      imageHeight: 400,
+    }
   ];
